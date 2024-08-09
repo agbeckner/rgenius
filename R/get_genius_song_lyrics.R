@@ -34,11 +34,13 @@ get_genius_song_lyrics<-function(song_id, output = 'tibble', url = NULL,
       html_element(xpath = "span") %>%
       html_text2() 
 
-  removing<-purrr::partial(str_replace_all, pattern = '\\[.*?\\]', replacement = '')
+  # added this line here because the changes that were made affected the data structure
+  lyrics <- unlist(strsplit(lyrics, split = "\n"))
 
-  removing2<-purrr::partial(str_replace_all, pattern = '\n', replacement = ' ')
+  removing<-purrr::partial(str_replace_all, pattern = '\\\\', replacement = ' ')
+  removing2<-purrr::partial(str_replace_all, pattern = '\\[.*?\\]', replacement = '')
 
-  lyrics <- lyrics %>% removing() %>% removing2() %>% .[!is.na(.) & .!=""]
+  lyrics <- lyrics %>% removing() %>% removing2 %>% .[!is.na(.) & .!=""]
 
   if(output == 'text'){
 
