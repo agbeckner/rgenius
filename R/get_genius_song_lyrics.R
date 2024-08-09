@@ -27,21 +27,30 @@ get_genius_song_lyrics<-function(song_id, output = 'tibble', url = NULL,
 
   } else {url<-url}
 
-  lyrics<-read_html(url) %>% html_nodes('p') %>% html_text()
+  # updated code using rvest 1.0.0 functions that replaced previous functions (https://rvest.tidyverse.org/reference/rename.html)
+  # and made some changes so that it will work with the changes that have been made to the html on genius
+  lyrics <-read_html(url) %>% 
+      html_elements(xpath = "//*[contains(@class, 'ReferentFragmentdesktop')]") %>%
+      html_element(xpath = "span") %>%
+      html_text2() 
 
   removing<-purrr::partial(str_replace_all, pattern = '\\[.*?\\]', replacement = '')
 
   removing2<-purrr::partial(str_replace_all, pattern = '\n', replacement = ' ')
 
+  lyrics <- lyrics %>% removing() %>% removing2() %>% .[!is.na(.) & .!=""]
+
   if(output == 'text'){
 
-    lyrics<-lyrics[1] %>% removing() %>% removing2()
+    # make text
+    lyrics <- toString(lyrics)
 
   } else{
 
-    lyrics<- str_split(lyrics, pattern = '\n')[[1]] %>%
-      enframe(name = NULL, value = 'Lyrics') %>%
-      apply(., 2, removing) %>% as_tibble() %>% filter(Lyrics != '')
+  # make tibble (basically same as code from original repo
+  lyrics<- lyrics %>%
+        enframe(name = NULL, value = 'Lyrics') %>% 
+        as_tibble() %>% filter(Lyrics != '')
 
   }
 
